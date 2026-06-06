@@ -1,0 +1,79 @@
+substitutions:
+  _REGION: us-central1
+  _REPO: thelook-agent
+  _SERVICE: thelook-agent
+  _JOB: thelook-agent-eval
+  _SA: thelook-agent-sa
+  _DBT_SL_HOST: semantic-layer.cloud.getdbt.com
+  _DBT_SL_ENV_ID: ""
+  _AGENT_MODEL: gemini-2.5-pro
+  _EVAL_BUCKET: ""
+
+steps:
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/agent:$COMMIT_SHA
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/agent:latest
+      - .
+
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - --all-tags
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/agent
+
+  - id: deploy-service
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/agent:$COMMIT_SHA
+      - --region=${_REGION}
+      - --no-allow-unauthenticated
+      - --service-account=${_SA}@$PROJECT_ID.iam.gserviceaccount.com
+      - --concurrency=1
+      - --timeout=600
+      - --min-instances=0
+      - --max-instances=3
+      - --memory=1Gi
+      - --cpu=1
+      - --set-env-vars=DBT_SL_HOST=${_DBT_SL_HOST},DBT_SL_ENV_ID=${_DBT_SL_ENV_ID},GCP_PROJECT=$PROJECT_ID,GCP_LOCATION=${_REGION},AGENT_MODEL=${_AGENT_MODEL}
+      - --set-secrets=DBT_SL_TOKEN=DBT_SL_TOKEN:latest
+
+  - id: deploy-eval-job
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        if gcloud run jobs describe ${_JOB} --region=${_REGION} >/dev/null 2>&1; then
+          verb=update
+        else
+          verb=create
+        fi
+        gcloud run jobs $verb ${_JOB} \
+          --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/agent:$COMMIT_SHA \
+          --region=${_REGION} \
+          --service-account=${_SA}@$PROJECT_ID.iam.gserviceaccount.com \
+          --task-timeout=3600 \
+          --max-retries=0 \
+          --memory=1Gi \
+          --cpu=1 \
+          --command=python \
+          --args=/app/eval/run_eval.py \
+          --set-env-vars=DBT_SL_HOST=${_DBT_SL_HOST},DBT_SL_ENV_ID=${_DBT_SL_ENV_ID},GCP_PROJECT=$PROJECT_ID,GCP_LOCATION=${_REGION},AGENT_MODEL=${_AGENT_MODEL},EVAL_GCS_BUCKET=${_EVAL_BUCKET} \
+          --set-secrets=DBT_SL_TOKEN=DBT_SL_TOKEN:latest
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/agent:$COMMIT_SHA
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/agent:latest
+
+options:
+  logging: CLOUD_LOGGING_ONLY

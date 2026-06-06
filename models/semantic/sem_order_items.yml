@@ -1,0 +1,157 @@
+version: 2
+
+semantic_models:
+  - name: order_items
+    description: |
+      Line-item grain of all orders. One row per item sold, with product
+      and customer attributes denormalized for analytics.
+    model: ref('fct_order_items')
+    defaults:
+      agg_time_dimension: order_created_at
+
+    entities:
+      - name: order_item
+        type: primary
+        expr: order_item_id
+      - name: order
+        type: foreign
+        expr: order_id
+      - name: user
+        type: foreign
+        expr: user_id
+      - name: product
+        type: foreign
+        expr: product_id
+
+    dimensions:
+      - name: order_created_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: product_category
+        type: categorical
+        description: "Top-level product category (e.g., Jeans, Tops)"
+      - name: product_department
+        type: categorical
+        description: "Men or Women"
+      - name: brand
+        type: categorical
+      - name: user_country
+        type: categorical
+        description: "Customer's country of residence"
+      - name: user_state
+        type: categorical
+      - name: user_gender
+        type: categorical
+      - name: traffic_source
+        type: categorical
+        description: "How the customer arrived (Email, Search, etc.)"
+      - name: item_status
+        type: categorical
+        description: "Lifecycle status of the line item"
+
+    measures:
+      - name: revenue
+        description: "Gross revenue from item sales, in USD"
+        agg: sum
+        expr: sale_price
+      - name: cost
+        description: "Product cost of goods sold"
+        agg: sum
+        expr: product_cost
+      - name: gross_profit_amount
+        description: "Revenue minus cost at the line-item level"
+        agg: sum
+        expr: gross_profit
+      - name: order_item_count
+        description: "Count of line items sold"
+        agg: count
+        expr: order_item_id
+      - name: distinct_orders
+        description: "Count of distinct orders"
+        agg: count_distinct
+        expr: order_id
+      - name: distinct_customers
+        description: "Count of distinct customers who purchased"
+        agg: count_distinct
+        expr: user_id
+      - name: returned_items
+        description: "Number of items that were returned"
+        agg: sum
+        expr: is_returned
+
+metrics:
+  # Simple metrics — direct measure references
+  - name: revenue
+    description: "Total gross revenue"
+    type: simple
+    label: Revenue
+    type_params:
+      measure: revenue
+
+  - name: cost
+    description: "Total cost of goods sold"
+    type: simple
+    label: Cost
+    type_params:
+      measure: cost
+
+  - name: orders
+    description: "Number of distinct orders"
+    type: simple
+    label: Orders
+    type_params:
+      measure: distinct_orders
+
+  - name: customers
+    description: "Number of distinct purchasing customers"
+    type: simple
+    label: Customers
+    type_params:
+      measure: distinct_customers
+
+  - name: items_sold
+    description: "Total line items sold"
+    type: simple
+    label: Items Sold
+    type_params:
+      measure: order_item_count
+
+  - name: items_returned
+    description: "Total line items returned"
+    type: simple
+    label: Items Returned
+    type_params:
+      measure: returned_items
+
+  # Derived / ratio metrics — these are where the semantic layer earns its keep
+  - name: gross_profit
+    description: "Revenue minus cost"
+    type: simple
+    label: Gross Profit
+    type_params:
+      measure: gross_profit_amount
+
+  - name: gross_margin_pct
+    description: "Gross profit as a percentage of revenue"
+    type: ratio
+    label: Gross Margin %
+    type_params:
+      numerator: gross_profit
+      denominator: revenue
+
+  - name: average_order_value
+    description: "Revenue divided by number of distinct orders"
+    type: ratio
+    label: AOV
+    type_params:
+      numerator: revenue
+      denominator: orders
+
+  - name: return_rate
+    description: "Items returned as a percentage of items sold"
+    type: ratio
+    label: Return Rate
+    type_params:
+      numerator: items_returned
+      denominator: items_sold

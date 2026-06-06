@@ -1,0 +1,18 @@
+version: 2
+
+sources:
+  - name: thelook
+    database: bigquery-public-data
+    schema: thelook_ecommerce
+    description: "Public e-commerce dataset hosted by Google"
+    tables:
+      - name: orders
+        description: "Order header records"
+      - name: order_items
+        description: "Order line items, one row per item in an order"
+      - name: users
+        description: "Customer records"
+      - name: products
+        description: "Product catalog"
+      - name: inventory_items
+        description: "Inventory units; each item is a sellable unit"

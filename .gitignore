@@ -1,0 +1,25 @@
+# macOS
+.DS_Store
+
+# Claude Code local config
+.claude/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# dbt
+target/
+dbt_packages/
+logs/
+
+# eval results (local runs)
+eval/results/
+
+# deploy secrets
+deploy/.env
+.env

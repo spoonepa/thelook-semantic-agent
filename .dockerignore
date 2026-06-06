@@ -1,0 +1,14 @@
+.git
+.gitignore
+.DS_Store
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+eval/results/
+target/
+dbt_packages/
+logs/
+.venv
+venv/
+.env
+deploy/.env
