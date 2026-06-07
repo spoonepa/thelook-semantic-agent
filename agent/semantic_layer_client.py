@@ -170,9 +170,14 @@ class SemanticLayerClient:
             )["query"]
             status = r["status"]
             if status == "SUCCESSFUL":
+                import base64
                 import json
 
-                parsed = json.loads(r["jsonResult"]) if r.get("jsonResult") else {}
+                raw = r.get("jsonResult")
+                if raw:
+                    parsed = json.loads(base64.b64decode(raw))
+                else:
+                    parsed = {}
                 return {
                     "status": status,
                     "sql": r.get("sql"),
