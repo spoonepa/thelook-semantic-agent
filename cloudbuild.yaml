@@ -8,6 +8,7 @@ substitutions:
   _DBT_SL_ENV_ID: ""
   _AGENT_MODEL: gemini-2.5-pro
   _EVAL_BUCKET: ""
+  _IMAGE_TAG: manual
 
 steps:
   - id: build
@@ -15,7 +16,7 @@ steps:
     args:
       - build
       - -t
-      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/agent:$COMMIT_SHA
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/agent:${_IMAGE_TAG}
       - -t
       - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/agent:latest
       - .
@@ -34,7 +35,7 @@ steps:
       - run
       - deploy
       - ${_SERVICE}
-      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/agent:$COMMIT_SHA
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/agent:${_IMAGE_TAG}
       - --region=${_REGION}
       - --no-allow-unauthenticated
       - --service-account=${_SA}@$PROJECT_ID.iam.gserviceaccount.com
@@ -59,7 +60,7 @@ steps:
           verb=create
         fi
         gcloud run jobs $verb ${_JOB} \
-          --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/agent:$COMMIT_SHA \
+          --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/agent:${_IMAGE_TAG} \
           --region=${_REGION} \
           --service-account=${_SA}@$PROJECT_ID.iam.gserviceaccount.com \
           --task-timeout=3600 \
@@ -72,7 +73,7 @@ steps:
           --set-secrets=DBT_SL_TOKEN=DBT_SL_TOKEN:latest
 
 images:
-  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/agent:$COMMIT_SHA
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/agent:${_IMAGE_TAG}
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/agent:latest
 
 options:

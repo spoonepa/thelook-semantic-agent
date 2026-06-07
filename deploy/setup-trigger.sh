@@ -47,6 +47,9 @@ SUBS="${SUBS},_DBT_SL_HOST=${DBT_SL_HOST}"
 SUBS="${SUBS},_DBT_SL_ENV_ID=${DBT_SL_ENV_ID}"
 SUBS="${SUBS},_AGENT_MODEL=${AGENT_MODEL}"
 SUBS="${SUBS},_EVAL_BUCKET=${EVAL_BUCKET}"
+# At trigger fire time, Cloud Build resolves $SHORT_SHA to the actual commit
+# sha. We escape with \$ so the shell passes the literal string through to gcloud.
+SUBS="${SUBS},_IMAGE_TAG=\$SHORT_SHA"
 
 # Only rebuild when files that affect the agent image change. dbt model edits
 # don't need a new container.

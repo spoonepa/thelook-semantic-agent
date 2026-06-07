@@ -26,11 +26,14 @@ source "$here/.env"
 
 cd "$repo_root"
 
-echo "==> Submitting Cloud Build"
+# Image tag — git sha when in a clean repo, otherwise timestamped fallback.
+IMAGE_TAG="$(git rev-parse --short HEAD 2>/dev/null || date +manual-%Y%m%d-%H%M%S)"
+
+echo "==> Submitting Cloud Build (image tag: $IMAGE_TAG)"
 gcloud builds submit \
   --project="$GCP_PROJECT" \
   --config=cloudbuild.yaml \
-  --substitutions="_REGION=${GCP_REGION},_REPO=${ARTIFACT_REPO},_SERVICE=${SERVICE_NAME},_JOB=${EVAL_JOB_NAME},_SA=${SERVICE_ACCOUNT},_DBT_SL_HOST=${DBT_SL_HOST},_DBT_SL_ENV_ID=${DBT_SL_ENV_ID},_AGENT_MODEL=${AGENT_MODEL},_EVAL_BUCKET=${EVAL_BUCKET}" \
+  --substitutions="_REGION=${GCP_REGION},_REPO=${ARTIFACT_REPO},_SERVICE=${SERVICE_NAME},_JOB=${EVAL_JOB_NAME},_SA=${SERVICE_ACCOUNT},_DBT_SL_HOST=${DBT_SL_HOST},_DBT_SL_ENV_ID=${DBT_SL_ENV_ID},_AGENT_MODEL=${AGENT_MODEL},_EVAL_BUCKET=${EVAL_BUCKET},_IMAGE_TAG=${IMAGE_TAG}" \
   .
 
 URL="$(gcloud run services describe "$SERVICE_NAME" \
