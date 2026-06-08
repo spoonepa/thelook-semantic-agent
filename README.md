@@ -1,3 +1,11 @@
+> **Companion to [Medium Post 1](https://medium.com/@spoonepa/the-semantic-layer-is-the-first-real-contract-for-enterprise-ai-agents-6a897dd025af)** — *"The Semantic Layer Is the First Real Contract for Enterprise AI Agents."*
+>
+> Stable at tag [`v1.0-post1`](https://github.com/spoonepa/thelook-semantic-agent/releases/tag/v1.0-post1). Improvements continue here for the semantic-layer side only (prompt iteration, Fusion YAML migration, BQ Storage Read API in bootstrap).
+>
+> **Subsequent posts extend the architecture in a separate repo:** [`spoonepa/thelook-context-agent`](https://github.com/spoonepa/thelook-context-agent) — Post 2 adds the entity contract (knowledge graph), Post 3 adds the policy contract (RLS).
+
+---
+
 # thelook_semantic — dbt Semantic Layer learning project
 
 A minimal dbt + MetricFlow project over Google's `bigquery-public-data.thelook_ecommerce`
